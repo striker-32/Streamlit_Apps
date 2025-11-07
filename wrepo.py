@@ -4,7 +4,7 @@ from streamlit_js_eval import get_geolocation
 import google.genai as genai
 
 WEATHER_API_KEY = "8f1b2bb4e9921443522d43cc36a8a719"
-GEMINI_API_KEY = "AIzaSyD2k4du2YV_ce2X2_xf8ohXCHPp68S9UD0"
+GEMINI_API_KEY = "AIzaSyAz3zC_aGMXlZWY31tBBJfZoEeQRVw0MX4"
 
 st.set_page_config(page_title="🌦️ Weather & Safety Assistant", page_icon="☁️")
 st.title("🌦️ Weather & Safety Assistant")
@@ -86,5 +86,6 @@ if st.button("Get Weather"):
                 st.error("⚠️ Could not fetch weather data.")
         else:
             st.error("❌ City not found.")
+
 
 
