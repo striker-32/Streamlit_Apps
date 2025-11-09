@@ -107,7 +107,6 @@ if menu=="Register":
         else:
             st.warning("Fill all fields!")
 
-# -------------------- LOGIN --------------------
 elif menu=="Login":
     st.title("🔑 Login")
     email=st.text_input("Email")
@@ -184,3 +183,4 @@ elif menu=="Profile" and st.session_state.logged_in:
     st.write(f"**DOB:** {u['dob']}")
     st.write(f"**Place:** {u['place']}")
     st.info("✨ You can view your past predictions and palm readings in future updates!")
+
