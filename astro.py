@@ -11,11 +11,12 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 # -------------------- DATABASE CONNECTION --------------------
 def connect_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
+        host="mydb-region.psdb.io",
+        user="your_username",
         password="Charan@1567",
         database="astro"
     )
+
 
 # -------------------- ZODIAC FUNCTION --------------------
 def get_zodiac_sign(day, month):
@@ -198,3 +199,4 @@ elif menu=="Profile" and st.session_state.logged_in:
     st.write(f"**DOB:** {u['dob']}")
     st.write(f"**Place:** {u['place']}")
     st.info("✨ You can view your past predictions and palm readings in future updates!")
+
