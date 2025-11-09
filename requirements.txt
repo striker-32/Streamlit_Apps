@@ -3,3 +3,5 @@ requests
 google-genai
 streamlit-js-eval
 streamlit-geolocation
+mysql-connector-python
+
