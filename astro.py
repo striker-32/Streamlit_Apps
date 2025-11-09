@@ -4,21 +4,18 @@ from datetime import date, timedelta
 from google import genai
 from google.genai import types
 
-# -------------------- GEMINI API SETUP --------------------
-GEMINI_API_KEY = "AIzaSyAzgBSc6mWHXzlMdCq8WyYS981w64Tm8ec"  # 🔑 Replace with your Gemini key
+GEMINI_API_KEY = "AIzaSyAzgBSc6mWHXzlMdCq8WyYS981w64Tm8ec" 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# -------------------- DATABASE CONNECTION --------------------
 def connect_db():
     return mysql.connector.connect(
-        host="mydb-region.psdb.io",
-        user="your_username",
+        host="localhost",
+        user="root",
         password="Charan@1567",
         database="astro"
     )
 
 
-# -------------------- ZODIAC FUNCTION --------------------
 def get_zodiac_sign(day, month):
     zodiac_dates = [
         ((12, 22), (1, 19), "Capricorn"), ((1, 20), (2, 18), "Aquarius"),
@@ -33,7 +30,6 @@ def get_zodiac_sign(day, month):
             return sign
     return "Capricorn"
 
-# -------------------- GEMINI HELPERS --------------------
 def ai_text(prompt):
     """Generic Gemini text generator"""
     try:
@@ -57,7 +53,6 @@ def analyze_palmistry_with_api(image_bytes):
     except Exception as e:
         return f"[Palmistry Error] {e}"
 
-# -------------------- DATABASE HELPERS --------------------
 def register_user(name, email, password, dob, place, zodiac, role="user"):
     conn = connect_db()
     cur = conn.cursor()
@@ -76,16 +71,13 @@ def verify_login(email, password):
     conn.close()
     return user
 
-# -------------------- SESSION --------------------
 if "logged_in" not in st.session_state:
     st.session_state.logged_in=False
 if "user" not in st.session_state:
     st.session_state.user=None
 
-# -------------------- APP CONFIG --------------------
 st.set_page_config(page_title="🔮 Astrology & Palmistry", layout="wide")
 
-# Sidebar Navigation
 if not st.session_state.logged_in:
     menu = st.sidebar.selectbox("Menu", ["Login","Register"])
 else:
@@ -96,7 +88,6 @@ else:
         ["Predictions","Palmistry","Chat Astrologer","Compatibility","Profile","Logout"]
     )
 
-# -------------------- REGISTER --------------------
 if menu=="Register":
     st.title("🌟 Register for Astrology App")
     name=st.text_input("Full Name")
@@ -131,13 +122,11 @@ elif menu=="Login":
         else:
             st.error("Invalid credentials!")
 
-# -------------------- LOGOUT --------------------
 elif menu=="Logout":
     st.session_state.logged_in=False
     st.session_state.user=None
     st.rerun()
 
-# -------------------- PREDICTIONS --------------------
 elif menu=="Predictions" and st.session_state.logged_in:
     user=st.session_state.user
     st.title(f"🔮 Astrology Predictions for {user['zodiac']}")
@@ -146,7 +135,6 @@ elif menu=="Predictions" and st.session_state.logged_in:
         pred=ai_text(f"Give a {period} horoscope for zodiac {user['zodiac']}.")
         st.success(pred)
 
-# -------------------- PALMISTRY --------------------
 elif menu=="Palmistry" and st.session_state.logged_in:
     st.title("✋ Palmistry (AI-Powered)")
     st.write("Place your hand in front of the camera and capture your palm.")
@@ -158,7 +146,6 @@ elif menu=="Palmistry" and st.session_state.logged_in:
             result=analyze_palmistry_with_api(img.getvalue())
         st.success(result)
 
-# -------------------- CHAT ASTROLOGER --------------------
 elif menu=="Chat Astrologer" and st.session_state.logged_in:
     st.title("💬 Chat with Your AI Astrologer")
     st.write("Ask anything about your zodiac, career, or future.")
@@ -177,7 +164,6 @@ elif menu=="Chat Astrologer" and st.session_state.logged_in:
         st.session_state.chat.append({"role":"assistant","content":reply})
         st.rerun()
 
-# -------------------- COMPATIBILITY --------------------
 elif menu=="Compatibility" and st.session_state.logged_in:
     st.title("💞 Love Compatibility Checker")
     name1=st.text_input("Your Name",st.session_state.user["name"])
@@ -189,7 +175,6 @@ elif menu=="Compatibility" and st.session_state.logged_in:
         result=ai_text(f"Compare love compatibility between {zodiac1} and {zodiac2}. Give a score out of 10 with an explanation.")
         st.success(result)
 
-# -------------------- PROFILE --------------------
 elif menu=="Profile" and st.session_state.logged_in:
     u=st.session_state.user
     st.title("👤 My Profile")
@@ -199,4 +184,3 @@ elif menu=="Profile" and st.session_state.logged_in:
     st.write(f"**DOB:** {u['dob']}")
     st.write(f"**Place:** {u['place']}")
     st.info("✨ You can view your past predictions and palm readings in future updates!")
-
