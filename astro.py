@@ -1,21 +1,24 @@
 import streamlit as st
 import mysql.connector
-from datetime import date, timedelta
+from datetime import date
 from google import genai
 from google.genai import types
 
-GEMINI_API_KEY = "AIzaSyAzgBSc6mWHXzlMdCq8WyYS981w64Tm8ec" 
+# -------------------- GEMINI API --------------------
+GEMINI_API_KEY = "AIzaSyAzgBSc6mWHXzlMdCq8WyYS981w64Tm8ec"
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# -------------------- DATABASE CONNECTION --------------------
 def connect_db():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="Charan@1567",
-        database="astro"
+        host="sql12.freesqldatabase.com",
+        user="sql12807349",
+        password="eGh4jjT1zN",
+        database="sql12807349",
+        Port number = 3306
     )
 
-
+# -------------------- ZODIAC FUNCTION --------------------
 def get_zodiac_sign(day, month):
     zodiac_dates = [
         ((12, 22), (1, 19), "Capricorn"), ((1, 20), (2, 18), "Aquarius"),
@@ -30,157 +33,233 @@ def get_zodiac_sign(day, month):
             return sign
     return "Capricorn"
 
+# -------------------- GEMINI TEXT GENERATION --------------------
 def ai_text(prompt):
-    """Generic Gemini text generator"""
     try:
-        resp = client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        return resp.text.strip()
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
+        )
+        return response.text.strip()
     except Exception as e:
         return f"[Error: {e}]"
 
+# -------------------- PALMISTRY ANALYSIS --------------------
 def analyze_palmistry_with_api(image_bytes):
-    """Gemini multimodal palm analysis"""
     try:
         img = types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg")
-        resp = client.models.generate_content(
+        response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[
-                "You are a professional palm reader. Describe this person's personality, emotions, and future with positivity.",
+                "You are a professional palm reader. Describe this person's personality, strengths, and future with positivity.",
                 img
             ]
         )
-        return resp.text.strip()
+        return response.text.strip()
     except Exception as e:
         return f"[Palmistry Error] {e}"
 
-def register_user(name, email, password, dob, place, zodiac, role="user"):
+# -------------------- DATABASE FUNCTIONS --------------------
+def register_user(name, email, password, dob, place, zodiac, phone):
     conn = connect_db()
     cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO users (name,email,password,dob,place,zodiac,role) VALUES (%s,%s,%s,%s,%s,%s,%s)",
-        (name,email,password,dob,place,zodiac,role)
-    )
+    sql = ("INSERT INTO users (name, email, password, dob, place, zodiac, phone) "
+           "VALUES (%s, %s, %s, %s, %s, %s, %s)")
+    cur.execute(sql, (name, email, password, dob, place, zodiac, phone))
     conn.commit()
     conn.close()
 
 def verify_login(email, password):
     conn = connect_db()
     cur = conn.cursor(dictionary=True)
-    cur.execute("SELECT * FROM users WHERE email=%s AND password=%s",(email,password))
+    cur.execute("SELECT * FROM users WHERE email=%s AND password=%s", (email, password))
     user = cur.fetchone()
     conn.close()
     return user
 
+# -------------------- STREAMLIT PAGE CONFIG --------------------
+st.set_page_config(page_title="🔮 Astro & Palmistry AI", layout="wide", page_icon="✨")
+
+# -------------------- CSS STYLING --------------------
+st.markdown("""
+<style>
+    .main-title {
+        text-align: center;
+        color: white;
+        font-size: 36px;
+        background: linear-gradient(90deg, #ff7eb3, #ff758c, #ff7eb3);
+        padding: 15px;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+    .stButton>button {
+        background: linear-gradient(90deg, #a855f7, #ec4899);
+        color: white;
+        font-weight: bold;
+        border-radius: 10px;
+        border: none;
+        padding: 0.5em 1.5em;
+        transition: 0.3s;
+    }
+    .stButton>button:hover {
+        transform: scale(1.05);
+        background: linear-gradient(90deg, #ec4899, #a855f7);
+    }
+    .sidebar .sidebar-content {
+        background-color: #f9fafb;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------- SESSION --------------------
 if "logged_in" not in st.session_state:
-    st.session_state.logged_in=False
+    st.session_state.logged_in = False
 if "user" not in st.session_state:
-    st.session_state.user=None
+    st.session_state.user = None
 
-st.set_page_config(page_title="🔮 Astrology & Palmistry", layout="wide")
+# -------------------- SIDEBAR NAVIGATION --------------------
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/4712/4712023.png", width=120)
+    st.markdown("### 🔮 **Astro & Palmistry App**")
+    if not st.session_state.logged_in:
+        menu = st.selectbox("Navigation", ["Login", "Register"])
+    else:
+        st.sidebar.success(f"Welcome, {st.session_state.user['name']} ✨")
+        menu = st.selectbox("Explore", ["Predictions", "Palmistry", "Chat Astrologer", "Compatibility", "Profile", "Logout"])
 
-if not st.session_state.logged_in:
-    menu = st.sidebar.selectbox("Menu", ["Login","Register"])
-else:
-    user = st.session_state.user
-    st.sidebar.success(f"Welcome, {user['name']}!")
-    menu = st.sidebar.selectbox(
-        "Select Feature",
-        ["Predictions","Palmistry","Chat Astrologer","Compatibility","Profile","Logout"]
-    )
-
-if menu=="Register":
-    st.title("🌟 Register for Astrology App")
-    name=st.text_input("Full Name")
-    email=st.text_input("Email")
-    password=st.text_input("Password",type="password")
-    dob=st.date_input("Date of Birth",min_value=date(1900,1,1),max_value=date.today())
-    place=st.text_input("Place of Birth")
+# -------------------- REGISTER PAGE --------------------
+if menu == "Register":
+    st.markdown('<div class="main-title">🌟 Create Your Account</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        name = st.text_input("Full Name")
+        email = st.text_input("Email")
+        password = st.text_input("Password", type="password")
+        phone = st.text_input("Phone Number", max_chars=15, placeholder="e.g. +91XXXXXXXXXX")
+    with col2:
+        dob = st.date_input("Date of Birth", min_value=date(1900, 1, 1), max_value=date.today())
+        place = st.text_input("Place of Birth")
 
     if st.button("Register"):
-        if all([name,email,password,place]):
-            zodiac=get_zodiac_sign(dob.day,dob.month)
+        if name and email and password and place and phone:
+            zodiac = get_zodiac_sign(dob.day, dob.month)
             try:
-                register_user(name,email,password,dob,place,zodiac)
-                st.success("✅ Registration complete! You can now log in.")
+                register_user(name, email, password, dob, place, zodiac, phone)
+                st.balloons()
+                st.success(f"✅ Registration Successful! Your zodiac sign is **{zodiac}**.")
+            except mysql.connector.IntegrityError:
+                st.error("⚠️ Email already registered.")
             except Exception as e:
                 st.error(f"Registration failed: {e}")
         else:
-            st.warning("Fill all fields!")
+            st.warning("Please fill all fields.")
 
-elif menu=="Login":
-    st.title("🔑 Login")
-    email=st.text_input("Email")
-    password=st.text_input("Password",type="password")
+# -------------------- LOGIN PAGE --------------------
+elif menu == "Login":
+    st.markdown('<div class="main-title">🔑 Login to Continue</div>', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown(
+            """
+            <style>
+                div[data-testid="stTextInput"] > div > div > input {
+                    width: 80% !important;
+                    margin: 0 auto !important;
+                    display: block;
+                    border-radius: 8px;
+                    height: 2.2em;
+                }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        email = st.text_input("Email", placeholder="Enter your email")
+        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        st.markdown("<br>", unsafe_allow_html=True)
+        login_col1, login_col2, login_col3 = st.columns([1, 1, 1])
+        with login_col2:
+            if st.button("Login", use_container_width=True):
+                user = verify_login(email, password)
+                if user:
+                    st.session_state.logged_in = True
+                    st.session_state.user = user
+                    st.toast(f"🌟 Welcome back, {user['name']}!")
+                    st.rerun()
+                else:
+                    st.error("Invalid email or password ❌")
 
-    if st.button("Login"):
-        u=verify_login(email,password)
-        if u:
-            st.session_state.logged_in=True
-            st.session_state.user=u
-            st.rerun()
-        else:
-            st.error("Invalid credentials!")
-
-elif menu=="Logout":
-    st.session_state.logged_in=False
-    st.session_state.user=None
+# -------------------- LOGOUT --------------------
+elif menu == "Logout":
+    st.session_state.logged_in = False
+    st.session_state.user = None
     st.rerun()
 
-elif menu=="Predictions" and st.session_state.logged_in:
-    user=st.session_state.user
-    st.title(f"🔮 Astrology Predictions for {user['zodiac']}")
-    period=st.selectbox("Select Prediction Period",["Today","Next Month","Whole Year"])
-    if st.button("Get Prediction"):
-        pred=ai_text(f"Give a {period} horoscope for zodiac {user['zodiac']}.")
-        st.success(pred)
+# -------------------- PREDICTIONS --------------------
+elif menu == "Predictions" and st.session_state.logged_in:
+    user = st.session_state.user
+    st.markdown(f'<div class="main-title">🔮 {user["zodiac"]} Horoscope</div>', unsafe_allow_html=True)
+    period = st.radio("Choose Prediction Period:", ["Today", "Next Month", "Whole Year"], horizontal=True)
+    if st.button("✨ Get My Prediction"):
+        with st.spinner("Consulting the stars... 🔭"):
+            prediction = ai_text(f"Give a {period} horoscope for zodiac {user['zodiac']}.")
+        st.success(prediction)
 
-elif menu=="Palmistry" and st.session_state.logged_in:
-    st.title("✋ Palmistry (AI-Powered)")
-    st.write("Place your hand in front of the camera and capture your palm.")
-    img=st.camera_input("Capture Palm Image")
-
+# -------------------- PALMISTRY --------------------
+elif menu == "Palmistry" and st.session_state.logged_in:
+    st.markdown('<div class="main-title">✋ AI Palm Reading</div>', unsafe_allow_html=True)
+    st.info("Capture or upload your palm image for AI-based reading.")
+    img = st.camera_input("📸 Capture Your Palm")
     if img:
-        st.image(img,use_column_width=True)
-        with st.spinner("Analyzing your palm..."):
-            result=analyze_palmistry_with_api(img.getvalue())
+        st.image(img, caption="Your Palm", use_container_width=True)
+        with st.spinner("Analyzing your palm lines... 🔮"):
+            result = analyze_palmistry_with_api(img.getvalue())
         st.success(result)
 
-elif menu=="Chat Astrologer" and st.session_state.logged_in:
-    st.title("💬 Chat with Your AI Astrologer")
-    st.write("Ask anything about your zodiac, career, or future.")
-    
+# -------------------- CHAT ASTROLOGER --------------------
+elif menu == "Chat Astrologer" and st.session_state.logged_in:
+    st.markdown('<div class="main-title">💬 Ask the AI Astrologer</div>', unsafe_allow_html=True)
+    st.caption("Ask about your zodiac, love, or future ✨")
+
     if "chat" not in st.session_state:
-        st.session_state.chat=[]
-        
+        st.session_state.chat = []
+
     for msg in st.session_state.chat:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
-            
-    user_input=st.chat_input("Ask your astrologer...")
+
+    user_input = st.chat_input("Ask something about your future...")
     if user_input:
-        st.session_state.chat.append({"role":"user","content":user_input})
-        reply=ai_text(f"You are an expert astrologer for zodiac {st.session_state.user['zodiac']}. {user_input}")
-        st.session_state.chat.append({"role":"assistant","content":reply})
+        st.session_state.chat.append({"role": "user", "content": user_input})
+        reply = ai_text(f"You are an astrologer. Answer this: {user_input}")
+        st.session_state.chat.append({"role": "assistant", "content": reply})
         st.rerun()
 
-elif menu=="Compatibility" and st.session_state.logged_in:
-    st.title("💞 Love Compatibility Checker")
-    name1=st.text_input("Your Name",st.session_state.user["name"])
-    zodiac1=st.session_state.user["zodiac"]
-    name2=st.text_input("Partner Name")
-    zodiac2=st.selectbox("Partner Zodiac",["Aries","Taurus","Gemini","Cancer","Leo","Virgo",
-                                           "Libra","Scorpio","Sagittarius","Capricorn","Aquarius","Pisces"])
-    if st.button("Check Compatibility"):
-        result=ai_text(f"Compare love compatibility between {zodiac1} and {zodiac2}. Give a score out of 10 with an explanation.")
+# -------------------- COMPATIBILITY --------------------
+elif menu == "Compatibility" and st.session_state.logged_in:
+    st.markdown('<div class="main-title">💞 Zodiac Compatibility</div>', unsafe_allow_html=True)
+    name1 = st.text_input("Your Name", st.session_state.user["name"])
+    zodiac1 = st.session_state.user["zodiac"]
+    name2 = st.text_input("Partner Name")
+    zodiac2 = st.selectbox("Partner Zodiac", [
+        "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
+        "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
+    ])
+    if st.button("💘 Check Compatibility"):
+        with st.spinner("Reading your stars together... 💫"):
+            result = ai_text(f"Compare love compatibility between {zodiac1} and {zodiac2}. Give a score out of 10 with a brief explanation.")
+        st.progress(100)
         st.success(result)
 
-elif menu=="Profile" and st.session_state.logged_in:
-    u=st.session_state.user
-    st.title("👤 My Profile")
-    st.write(f"**Name:** {u['name']}")
-    st.write(f"**Email:** {u['email']}")
-    st.write(f"**Zodiac:** {u['zodiac']}")
-    st.write(f"**DOB:** {u['dob']}")
-    st.write(f"**Place:** {u['place']}")
-    st.info("✨ You can view your past predictions and palm readings in future updates!")
-
+# -------------------- PROFILE --------------------
+elif menu == "Profile" and st.session_state.logged_in:
+    u = st.session_state.user
+    st.markdown('<div class="main-title">👤 My Profile</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Name:** {u['name']}")
+        st.write(f"**Email:** {u['email']}")
+        st.write(f"**Phone:** {u['phone']}")
+        st.write(f"**Zodiac:** {u['zodiac']}")
+    with col2:
+        st.write(f"**Date of Birth:** {u['dob']}")
+        st.write(f"**Place of Birth:** {u['place']}")
+    st.info("✨ More exciting profile insights coming soon!")
