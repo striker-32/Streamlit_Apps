@@ -15,7 +15,7 @@ def connect_db():
         user="sql12807349",
         password="eGh4jjT1zN",
         database="sql12807349",
-        Port number = 3306
+        Port = 3306
     )
 
 # -------------------- ZODIAC FUNCTION --------------------
@@ -263,3 +263,4 @@ elif menu == "Profile" and st.session_state.logged_in:
         st.write(f"**Date of Birth:** {u['dob']}")
         st.write(f"**Place of Birth:** {u['place']}")
     st.info("✨ More exciting profile insights coming soon!")
+
