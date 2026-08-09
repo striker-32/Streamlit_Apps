@@ -3,7 +3,7 @@ import streamlit as st
 import google.genai as genai
 
 WEATHER_API_KEY = "8f1b2bb4e9921443522d43cc36a8a719"
-GEMINI_API_KEY = "AIzaSyD2k4du2yV_ce2X2_xf8ohXCHPp68S9UD0"
+GEMINI_API_KEY = "AQ.Ab8RN6KKRGnYrfjM_3XZ2dWh4JYPBoVLi88SUndQA4kjJMJWgA"
 
 st.set_page_config(page_title="🌦️ Weather & Safety Assistant", page_icon="☁️")
 st.title("🌦️ Weather & Safety Assistant")
