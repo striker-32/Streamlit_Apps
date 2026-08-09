@@ -4,7 +4,7 @@ from streamlit_js_eval import get_geolocation
 import google.genai as genai
 
 WEATHER_API_KEY = "8f1b2bb4e9921443522d43cc36a8a719"
-GEMINI_API_KEY = ""
+GEMINI_API_KEY = "AQ.Ab8RN6JXkUX7xFTJCOc42aFxzDSxmEuLKH-hYLTNghxbOQp1QA"
 
 st.set_page_config(page_title="🌦️ Weather & Safety Assistant", page_icon="☁️")
 st.title("🌦️ Weather & Safety Assistant")
